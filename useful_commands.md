@@ -25,7 +25,7 @@ Now, push your changes, and pull again to syncronize
 `git push`
 `git pull`
 
-#How to Link 
+# How to Link 
 1. Open Advanced Network Communication
 2. Go to the list of networks and click on them, check the name and make sure that it matches the name you want to set as receiver
 3. Go to IPv4 Settings
