@@ -20,7 +20,11 @@ def udp_sender(target_ip, port, frames, frame_size, src_ip=None):
 
     start_send = time.time()
     for i in range(frames):
-        packet = i.to_bytes(4, 'big') + payload  # prepend frame ID
+        # packet = i.to_bytes(4, 'big') + payload  # prepend frame ID
+        
+        message = f"{packet}"
+        packet = message.encode()
+        
         sock.sendto(packet, (target_ip, port))
         timestamps[i] = time.time()
         sent_bytes += len(packet)
