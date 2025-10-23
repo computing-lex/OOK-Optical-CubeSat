@@ -1,115 +1,82 @@
 #!/usr/bin/env python3
-# fiber_speed_test_sender.py
 import socket
-import time
 import argparse
-import threading
-import struct
+import time
 import statistics
 
-HEADER_FMT = "!Id"   # network byte order: unsigned int (4) + double (8) => 12 bytes
-HEADER_LEN = struct.calcsize(HEADER_FMT)
-
-def receiver_thread(sock, frames, recv_dict, latencies, stop_event):
-    """Thread that receives echoes and records RTTs by matching seq -> tx_time"""
-    while not stop_event.is_set():
-        try:
-            data, addr = sock.recvfrom(65536)
-        except socket.timeout:
-            continue
-        now = time.time()
-        if len(data) < HEADER_LEN:
-            continue
-        try:
-            seq, tx_ts = struct.unpack(HEADER_FMT, data[:HEADER_LEN])
-        except struct.error:
-            continue
-        # compute RTT (ms)
-        rtt_ms = (now - tx_ts) * 1000.0
-        latencies.append(rtt_ms)
-        # mark as received
-        recv_dict[seq] = now
-
 def udp_sender(target_ip, port, frames, frame_size, src_ip=None):
-    # create UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(0.5)
-    # increase buffers for higher throughput
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 4 * 1024 * 1024)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4 * 1024 * 1024)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8*1024*1024)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8*1024*1024)
 
     if src_ip:
         sock.bind((src_ip, 0))
 
     print(f"[TX] Target {target_ip}:{port} frames={frames} size={frame_size} bytes")
 
-    # shared structures
-    recv_dict = {}            # seq -> receive_time (presence means echoed back)
-    latencies = []            # list of RTT ms
-    stop_event = threading.Event()
+    payload = b"A" * frame_size
+    timestamps = {}
+    sent_bytes = 0
 
-    # start receiver thread (listens for echoes)
-    recv_t = threading.Thread(target=receiver_thread, args=(sock, frames, recv_dict, latencies, stop_event), daemon=True)
-    recv_t.start()
+    start_send = time.time()
+    for i in range(frames):
+        packet = i.to_bytes(4, 'big') + payload  # prepend frame ID
+        sock.sendto(packet, (target_ip, port))
+        timestamps[i] = time.time()
+        sent_bytes += len(packet)
+        if (i+1) % 1000 == 0:
+            print(f"Sent frame {i+1}/{frames}")
+    end_send = time.time()
 
-    # build payload buffer
-    total_bytes = 0
-    start_time = time.time()
+    print(f"[TX] Finished sending {frames} packets in {end_send - start_send:.3f}s, waiting 2s for echoes...")
 
-    for seq in range(frames):
-        tx_ts = time.time()
-        header = struct.pack(HEADER_FMT, seq, tx_ts)
-        if frame_size < HEADER_LEN:
-            raise ValueError(f"frame_size must be >= {HEADER_LEN}")
-        payload = header + b"\x55" * (frame_size - HEADER_LEN)
+    # Wait for echoes and compute latency
+    sock.settimeout(2)
+    received = 0
+    latencies = []
+    recv_bytes = 0
+    start_recv = time.time()
+    while True:
         try:
-            sock.sendto(payload, (target_ip, port))
-            total_bytes += len(payload)
-        except Exception as e:
-            print(f"[TX] send error seq={seq}: {e}")
-        # no per-packet recv blocking — fire-and-forget
-        # optionally throttle here if you want lower sender rate
+            data, _ = sock.recvfrom(2048)
+            recv_time = time.time()
+            if len(data) >= 4:
+                fid = int.from_bytes(data[:4], 'big')
+                if fid in timestamps:
+                    latencies.append((recv_time - timestamps[fid]) * 1000)  # ms
+                    received += 1
+                    recv_bytes += len(data)
+        except socket.timeout:
+            break
+    end_recv = time.time()
 
-        # small yield to avoid starving receiver thread on some systems
-        if seq % 10000 == 0 and seq != 0:
-            time.sleep(0.0001)
-
-    # sending done — give receiver some time to collect echoes
-    send_elapsed = time.time() - start_time
-    grace = 2.0
-    print(f"[TX] Finished sending {frames} packets in {send_elapsed:.3f}s, waiting {grace}s for echoes...")
-    time.sleep(grace)
-    stop_event.set()
-    recv_t.join(timeout=1.0)
-
-    # compute metrics
-    sent_packets = frames
-    received_packets = len(recv_dict)
-    lost_packets = sent_packets - received_packets
-    packet_loss_pct = (lost_packets / sent_packets) * 100.0 if sent_packets else 0.0
-    data_rate_mbps = (total_bytes * 8) / (send_elapsed * 1_000_000) if send_elapsed > 0 else 0.0
-    avg_latency = statistics.mean(latencies) if latencies else 0.0
-    jitter = statistics.stdev(latencies) if len(latencies) > 1 else 0.0
-    min_latency = min(latencies) if latencies else 0.0
-    max_latency = max(latencies) if latencies else 0.0
+    # Compute metrics
+    send_time = end_send - start_send
+    recv_time = end_recv - start_recv
+    loss = (frames - received) / frames * 100
+    avg_latency = statistics.mean(latencies) if latencies else 0
+    jitter = statistics.pstdev(latencies) if len(latencies) > 1 else 0
+    tx_rate = (sent_bytes * 8) / send_time / 1e6  # Mbps
+    rx_rate = (recv_bytes * 8) / recv_time / 1e6 if recv_time > 0 else 0
 
     print("\n--- Test Summary ---")
-    print(f"Sent packets:         {sent_packets}")
-    print(f"Received echoes:      {received_packets}")
-    print(f"Lost packets:         {lost_packets} ({packet_loss_pct:.2f}%)")
-    print(f"Measured Tx rate:     {data_rate_mbps:.2f} Mbps (based on send time)")
-    print(f"Latency (ms): avg={avg_latency:.3f} min={min_latency:.3f} max={max_latency:.3f}")
+    print(f"Sent packets:         {frames}")
+    print(f"Received echoes:      {received}")
+    print(f"Lost packets:         {frames - received} ({loss:.2f}%)")
+    print(f"Measured Tx rate:     {tx_rate:.2f} Mbps (based on send time)")
+    print(f"Measured Rx rate:     {rx_rate:.2f} Mbps (based on receive time)")
+    print(f"Latency (ms):         avg={avg_latency:.3f} min={min(latencies):.3f} max={max(latencies):.3f}" if latencies else "Latency: N/A")
     print(f"Jitter (std dev ms):  {jitter:.3f}")
-    print(f"Total send time:      {send_elapsed:.3f} s")
-    print(f"Note: Small grace window was used to collect echoes.")
+    print(f"Total send time:      {send_time:.3f} s")
+    print(f"Total recv window:    {recv_time:.3f} s")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--target", default="10.0.0.1", help="Receiver IP")
-    parser.add_argument("--port", type=int, default=5005)
-    parser.add_argument("--frames", type=int, default=10000)
-    parser.add_argument("--frame_size", type=int, default=512)
-    parser.add_argument("--src_ip", default=None, help="Source IP to bind (optional)")
+    parser = argparse.ArgumentParser(description="UDP Fiber Sender with Metrics")
+    parser.add_argument("--target", type=str, default="10.0.0.1", help="Receiver IP")
+    parser.add_argument("--port", type=int, default=5005, help="UDP port")
+    parser.add_argument("--frames", type=int, default=10000, help="Number of packets to send")
+    parser.add_argument("--frame_size", type=int, default=512, help="Packet payload size in bytes")
+    parser.add_argument("--src_ip", type=str, default=None, help="Local source IP (optional)")
     args = parser.parse_args()
 
     udp_sender(args.target, args.port, args.frames, args.frame_size, args.src_ip)
