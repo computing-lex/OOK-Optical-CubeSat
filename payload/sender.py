@@ -22,7 +22,7 @@ def udp_sender(target_ip, port, frames, frame_size, src_ip=None):
     for i in range(frames):
         # packet = i.to_bytes(4, 'big') + payload  # prepend frame ID
         
-        message = f"{packet}"
+        message = f"{i}"
         packet = message.encode()
         
         sock.sendto(packet, (target_ip, port))
