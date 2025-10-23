@@ -20,7 +20,11 @@ def udp_receiver(listen_ip, port, timeout, rx_power):
             data, addr = sock.recvfrom(2048)
             total_bytes += len(data)
             packets += 1
-
+            
+            # Set start time on first recieved packet
+            if packets == 1:
+                start_time = time.time()
+            
             # Echo back for latency/jitter calculation
             sock.sendto(data, addr)
     except socket.timeout:
