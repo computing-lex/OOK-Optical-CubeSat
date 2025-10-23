@@ -15,12 +15,14 @@ def udp_receiver(bind_ip, port, echo=True):
     start_time = time.time()
     latencies = []
     last_time = start_time
+    last_recv_bytes = recv_bytes
 
     try:
         while True:
             data, addr = sock.recvfrom(2048)
             now = time.time()
             recv_bytes += len(data)
+            last_recv_bytes += len(data)
             count += 1
 
             if echo:
@@ -32,8 +34,9 @@ def udp_receiver(bind_ip, port, echo=True):
 
             if count % 1000 == 0:
                 elapsed = now - start_time
-                rate = (recv_bytes * 8) / elapsed / 1e6
+                rate = (last_recv_bytes * 8) / elapsed / 1e6
                 print(f"[RX] {count} packets received ({rate:.2f} Mbps avg)")
+                last_recv_bytes = 0 # reset
     except KeyboardInterrupt:
         pass
 
