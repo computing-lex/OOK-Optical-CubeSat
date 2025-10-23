@@ -20,7 +20,7 @@ def udp_receiver(bind_ip, port, echo=True):
     try:
         while True:
             data, addr = sock.recvfrom(2048)
-            print(f"Packet Received: {data.decode("utf-8")}")
+            print(f"Packet Received: {data.decode('utf-8')}")
             now = time.time()
             recv_bytes += len(data)
             last_recv_bytes += len(data)
