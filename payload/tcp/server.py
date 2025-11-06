@@ -1,47 +1,34 @@
 import socket
 
-if __name__ == '__main__':
-    # Defining Socket
-    host = '10.0.0.1'
-    port = 8080
-    totalclient = int(input('Enter number of clients: '))
+# Server config
+LISTEN_ADDRESS = '0.0.0.0'  # Standard loopback interface address (localhost)
+LISTEN_PORT = 5001 # Listening port 
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind((host, port))
-    sock.listen(totalclient)
-    # Establishing Connections
-    connections = []
-    print('Initiating clients')
-    for i in range(totalclient):
-        conn = sock.accept()
-        connections.append(conn)
-        print('Connected with client', i+1)
+if __name__ == "__main__":
 
-    fileno = 0
-    idx = 0
-    for conn in connections:
-        # Receiving File Data
-        idx += 1
-        data = conn[0].recv(1024).decode()
+    # Create listening socket 
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        if not data:
-            continue
-    # Creating a new file at server end and writing the data
-        filename = 'output'+str(fileno)+'.txt'
-        fileno = fileno+1
-        fo = open(filename, "w")
-        while data:
-            if not data:
-                break
-            else:
-                fo.write(data)
-                data = conn[0].recv(1024).decode()
+    # Bind to address and port to listen
+    server_socket.bind((LISTEN_ADDRESS, LISTEN_PORT))
+    server_socket.listen(1) # Listen allowing 1 connection at a time
 
-        print()
-        print('Receiving file from client', idx)
-        print()
-        print('Received successfully! New filename is:', filename)
-        fo.close()
-    # Closing all Connections
-    for conn in connections:
-        conn[0].close()
+    print(f'Listening on {LISTEN_ADDRESS}:{LISTEN_PORT}')
+
+    while True: # Continuously accept new connections
+        client_socket, address = server_socket.accept() 
+        print(f'Accepted connection from {address[0]}:{address[1]}')
+
+        with client_socket:
+            # Receive file contents in 1KB chunks
+            print('Receiving...')
+            chunk_buffer = client_socket.recv(1024)
+
+            # Write bytes to target file          
+            with open('received_file', 'wb') as fout:
+                while chunk_buffer:
+                    print('Writing chunk...', end='\r')
+                    fout.write(chunk_buffer)
+                    chunk_buffer = client_socket.recv(1024)
+
+            print('File received!')

@@ -1,28 +1,23 @@
 import socket
-# Creating Client Socket
-if __name__ == '__main__':
-    host = '10.0.0.1'
-    port = 8080
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# Connecting with Server
-    sock.connect((host, port))
+SERVER_ADDRESS = '0.0.0.0'
+SERVER_PORT = 5001 
 
-    while True:
+if __name__ == "__main__":
 
-        filename = input('Input filename you want to send: ')
-        try:
-           # Reading file and sending data to server
-            fi = open(filename, "r")
-            data = fi.read()
-            if not data:
-                break
-            while data:
-                sock.send(str(data).encode())
-                data = fi.read()
-            # File is closed after data is sent
-            fi.close()
+    # Open socket connection to server
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.connect((SERVER_ADDRESS, SERVER_PORT))
+        print('Connected!')
 
-        except IOError:
-            print('You entered an invalid filename!\
-                Please enter a valid name')
+        # Send text file line by line 
+        with open('test_image.jpeg','rb') as fh:
+            print('Sending file...')
+            while True:
+                data = fh.read(1024)
+                if not data:
+                    break 
+
+                sock.sendall(data) # Send encoded bytes
+
+    print('File transfer complete!')
