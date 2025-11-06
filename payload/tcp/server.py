@@ -2,7 +2,7 @@ import socket
 
 # Server config
 LISTEN_ADDRESS = '0.0.0.0'  # Standard loopback interface address (localhost)
-LISTEN_PORT = 5001 # Listening port 
+LISTEN_PORT = 5002 # Listening port 
 
 if __name__ == "__main__":
 

@@ -1,7 +1,7 @@
 import socket
 
 SERVER_ADDRESS = '0.0.0.0'
-SERVER_PORT = 5001 
+SERVER_PORT = 5002 
 
 if __name__ == "__main__":
 
