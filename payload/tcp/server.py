@@ -1,8 +1,8 @@
 import socket
 
 # Server config
-LISTEN_ADDRESS = '0.0.0.0'  # Standard loopback interface address (localhost)
-LISTEN_PORT = 5001 # Listening port 
+LISTEN_ADDRESS = '10.0.0.1'  # Standard loopback interface address (localhost)
+LISTEN_PORT = 5004 # Listening port 
 
 if __name__ == "__main__":
 
