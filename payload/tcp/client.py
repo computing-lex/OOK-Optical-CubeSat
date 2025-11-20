@@ -1,7 +1,7 @@
 import socket
 
 SERVER_ADDRESS = '0.0.0.0'
-SERVER_PORT = 5004 
+SERVER_PORT = 5005 
 
 if __name__ == "__main__":
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
         with open('test_image.jpeg','rb') as fh:
             print('Sending file...')
             while True:
-                data = fh.read(1024)
+                data = fh.read(1024*5)
                 if not data:
                     break 
 
