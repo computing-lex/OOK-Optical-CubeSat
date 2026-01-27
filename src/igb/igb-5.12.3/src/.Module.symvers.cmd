@@ -1,1 +1,0 @@
-cmd_/home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/Module.symvers := sed 's/\.ko$$/\.o/' /home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/modules.order | scripts/mod/modpost -m   -o /home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/Module.symvers -e -i Module.symvers   -T -

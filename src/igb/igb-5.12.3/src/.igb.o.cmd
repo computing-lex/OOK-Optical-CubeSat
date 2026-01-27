@@ -1,1 +1,0 @@
-cmd_/home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/igb.o := ld -EL  -maarch64elf -z noexecstack   -r -o /home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/igb.o @/home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/igb.mod

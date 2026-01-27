@@ -1,1 +1,0 @@
-cmd_/home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/igb.ko := ld -r -EL  -maarch64elf -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/igb.ko /home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/igb.o /home/ook/Documents/OOK-Optical-CubeSat/src/igb/igb-5.12.3/src/igb.mod.o;  true
