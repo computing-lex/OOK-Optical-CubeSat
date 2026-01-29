@@ -4,6 +4,8 @@
 
 `ip link show` - show IP devices and their statuses
 
+dd if=/dev/zero of=upload_test bs=1M count=size_in_megabytes
+
 # Transceiver order
 The bracket has an L shape, the transceiver closest to that bracket is 0.
 
