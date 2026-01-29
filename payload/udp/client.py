@@ -1,6 +1,7 @@
 import os
 import socket
 import struct
+import sys
 import time
 import zlib
 
@@ -34,7 +35,7 @@ def recv_ack(sock):
     return None
 
 def main():
-    filename = "test_video.mp4"
+    filename = sys.argv[1]
     filesize = os.path.getsize(filename)
 
     # Compute whole-file CRC32 locally (for end-to-end verification)
