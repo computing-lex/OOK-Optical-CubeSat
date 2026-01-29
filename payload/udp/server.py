@@ -2,7 +2,7 @@ import socket
 import struct
 import zlib
 
-LISTEN_ADDRESS = "10.0.0.2"
+LISTEN_ADDRESS = "10.0.0.1"
 LISTEN_PORT = 5009
 
 OUTFILE = "received_file.mp4"

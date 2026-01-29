@@ -6,7 +6,7 @@
 
 `dd if=/dev/zero of=[filename] bs=1M count=[size_in_megabytes]` - generate file of a given size
 
-# Transceiver order
+# Transceiver orde
 The bracket has an L shape, the transceiver closest to that bracket is 0.
 
 # Reference Documents
