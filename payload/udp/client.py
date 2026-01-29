@@ -7,7 +7,7 @@ import zlib
 SERVER_ADDRESS = "10.0.0.1"
 SERVER_PORT = 5009
 
-CHUNK_SIZE = 5 * 1024          # 5 KB payload
+CHUNK_SIZE = 1024         
 SOCKET_TIMEOUT = 0.25          # seconds
 MAX_RETRIES = 50
 
