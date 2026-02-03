@@ -39,6 +39,7 @@ def main():
                     # Verify CRC32 of payload
                     calc = zlib.crc32(payload) & 0xFFFFFFFF
                     if calc != crc:
+                        print(f"Checksum MISMATCH on packet {seq}")
                         # corrupted packet: do not ACK (client will retry)
                         continue
 
@@ -46,6 +47,9 @@ def main():
                     if seq == expected_seq:
                         fout.write(payload)
                         file_crc = zlib.crc32(payload, file_crc) & 0xFFFFFFFF
+                        # Update display
+                        if seq % 50 == 0:
+                            print(f"Recieved seq={seq}", end="\r")
                         expected_seq += 1
                         # ACK this seq
                         sock.sendto(b"A" + struct.pack("!I", seq), addr)
