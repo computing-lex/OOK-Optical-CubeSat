@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 import os
 import socket
 import struct
@@ -48,11 +48,11 @@ def main():
                 break
             file_crc = zlib.crc32(b, file_crc) & 0xFFFFFFFF
 
-    starttime = time.time
+    starttime = time.time()
     
     print(f"Sending: {filename} ({filesize} bytes)")
     print(f"Local file CRC32: 0x{file_crc:08X}")
-    print(f"Time started at: {datetime.fromtimestamp(starttime)}")
+    #print("Time started at: ", datetime.fromtimestamp(str_time))
 
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.settimeout(SOCKET_TIMEOUT)
@@ -93,7 +93,7 @@ def main():
         elapsedtime = time.time() - starttime
 
         print(f"\nTime elapsed: {elapsedtime}s")
-        print(f"Average datarate: {filesize/elapsedtime}")
+        print(f"Average datarate: {filesize/elapsedtime} b/s")
 
         # Send EOF (no payload)
         eof_header = struct.pack(HDR_FMT, TYPE_EOF, seq, 0, 0)
