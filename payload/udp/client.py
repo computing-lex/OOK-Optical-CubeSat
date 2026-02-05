@@ -53,34 +53,42 @@ def main():
     print(f"Local file CRC32: 0x{file_crc:08X}")
     print(f"Time started at: {time.localtime(starttime)}")
 
+    # Start connection
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.settimeout(SOCKET_TIMEOUT)
 
         seq = 0
         sent_bytes = 0
 
+        # Open the file
         with open(filename, "rb") as fh:
             while True:
-                payload = fh.read(CHUNK_SIZE)
+                # Read a piece of the file according to the size of each chunk
+                payload = fh.read(CHUNK_SIZE) 
                 if not payload:
                     break
-
+                
+                # Construct the packet
                 crc = zlib.crc32(payload) & 0xFFFFFFFF
                 header = struct.pack(HDR_FMT, TYPE_DATA, seq, len(payload), crc)
                 pkt = header + payload
 
-                retries = 0
-                while True:
-                    sock.sendto(pkt, (SERVER_ADDRESS, SERVER_PORT))
-                    try:
-                        ack = recv_ack(sock)
-                        if ack and ack[0] == "ACK" and ack[1] == seq:
-                            break  # good
-                    except socket.timeout:
-                        retries += 1
-                        if retries > MAX_RETRIES:
-                            raise RuntimeError(f"Too many retries on seq={seq}")
-                        continue
+                # Send packet
+                sock.sendto(pkt, (SERVER_ADDRESS, SERVER_PORT))
+
+                ## Resend if failed
+                #retries = 0
+                #while True:
+                #    sock.sendto(pkt, (SERVER_ADDRESS, SERVER_PORT))
+                #    try:
+                #        ack = recv_ack(sock)
+                #        if ack and ack[0] == "ACK" and ack[1] == seq:
+                #            break  # good
+                #    except socket.timeout:
+                #        retries += 1
+                #        if retries > MAX_RETRIES:
+                #            raise RuntimeError(f"Too many retries on seq={seq}")
+                #        continue
 
                 sent_bytes += len(payload)
                 if seq % 50 == 0:

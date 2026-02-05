@@ -52,11 +52,12 @@ def main():
                             print(f"Recieved seq={seq}", end="\r")
                         expected_seq += 1
                         # ACK this seq
-                        sock.sendto(b"A" + struct.pack("!I", seq), addr)
+                        # sock.sendto(b"A" + struct.pack("!I", seq), addr)
                     else:
                         # If out of order/duplicate, ACK last good (helps stop re-sends)
-                        last_good = expected_seq - 1 if expected_seq > 0 else 0
-                        sock.sendto(b"A" + struct.pack("!I", last_good), addr)
+                        print(f"Bad SEQ number={seq}")
+                        #last_good = expected_seq - 1 if expected_seq > 0 else 0
+                        #sock.sendto(b"A" + struct.pack("!I", last_good), addr)
 
                 elif pkt_type == TYPE_EOF:
                     # Send final file checksum back
