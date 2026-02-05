@@ -55,7 +55,8 @@ def main():
                         # sock.sendto(b"A" + struct.pack("!I", seq), addr)
                     else:
                         # If out of order/duplicate, ACK last good (helps stop re-sends)
-                        print(f"Bad SEQ number={seq}")
+                        print(f"Recieved seq={seq} Expected SEQ number={expected_seq}", end="\r")
+                        expected_seq=seq
                         #last_good = expected_seq - 1 if expected_seq > 0 else 0
                         #sock.sendto(b"A" + struct.pack("!I", last_good), addr)
 

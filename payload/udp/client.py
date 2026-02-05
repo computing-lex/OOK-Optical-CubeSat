@@ -5,7 +5,7 @@ import sys
 import time
 import zlib
 
-SERVER_ADDRESS = "10.0.0.1"
+SERVER_ADDRESS = "10.0.0.2"
 SERVER_PORT = 5009
 
 CHUNK_SIZE = 1024         
@@ -51,7 +51,6 @@ def main():
     
     print(f"Sending: {filename} ({filesize} bytes)")
     print(f"Local file CRC32: 0x{file_crc:08X}")
-    print(f"Time started at: {time.localtime(starttime)}")
 
     # Start connection
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
@@ -97,7 +96,7 @@ def main():
 
         print(f"\nAll data packets sent. total packets={seq}")
         
-        elapsedtime = time.time - starttime
+        elapsedtime = time.time() - starttime
 
         print(f"\nTime elapsed: {elapsedtime}s")
         print(f"Average datarate: {filesize/elapsedtime}")
