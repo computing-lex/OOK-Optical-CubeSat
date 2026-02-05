@@ -47,7 +47,7 @@ def main():
                 break
             file_crc = zlib.crc32(b, file_crc) & 0xFFFFFFFF
 
-    starttime = time.time
+    starttime = time.time()
     
     print(f"Sending: {filename} ({filesize} bytes)")
     print(f"Local file CRC32: 0x{file_crc:08X}")
@@ -96,10 +96,14 @@ def main():
 
         print(f"\nAll data packets sent. total packets={seq}")
         
-        elapsedtime = time.time() - starttime
+        currenttime = time.time()
+        elapsedtime = currenttime - starttime
+        datarate = (filesize / elapsedtime)  / pow(10,6)
 
         print(f"\nTime elapsed: {elapsedtime}s")
-        print(f"Average datarate: {filesize/elapsedtime}")
+        print(f"Filesize: {filesize}b")
+
+        print(f"Average datarate: {datarate}")
 
         # Send EOF (no payload)
         eof_header = struct.pack(HDR_FMT, TYPE_EOF, seq, 0, 0)
