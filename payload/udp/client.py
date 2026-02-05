@@ -8,7 +8,7 @@ import zlib
 SERVER_ADDRESS = "10.0.0.2"
 SERVER_PORT = 5009
 
-CHUNK_SIZE = 1024         
+CHUNK_SIZE = 1460         
 SOCKET_TIMEOUT = 0.25          # seconds
 MAX_RETRIES = 50
 
@@ -98,7 +98,7 @@ def main():
         
         currenttime = time.time()
         elapsedtime = currenttime - starttime
-        datarate = (filesize / elapsedtime)  / pow(10,6)
+        datarate = (filesize*8 / elapsedtime)  / pow(10,6)
 
         print(f"\nTime elapsed: {elapsedtime}s")
         print(f"Filesize: {filesize}b")
