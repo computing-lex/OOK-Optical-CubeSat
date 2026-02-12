@@ -59,6 +59,7 @@ def main():
                         dropped_pack += 1
                         print(f"Recieved seq={seq} Dropped packets={dropped_pack}", end="\r")
                         expected_seq=seq
+                        expected_seq += 1
                         #last_good = expected_seq - 1 if expected_seq > 0 else 0
                         #sock.sendto(b"A" + struct.pack("!I", last_good), addr)
 
