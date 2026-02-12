@@ -98,7 +98,7 @@ def main():
         
         currenttime = time.time()
         elapsedtime = currenttime - starttime
-        datarate = (filesize*8 / elapsedtime)  / pow(10,6)
+        datarate = (filesize / elapsedtime)  / pow(10,6)
 
         print(f"\nTime elapsed: {elapsedtime}s")
         print(f"Filesize: {filesize}b")

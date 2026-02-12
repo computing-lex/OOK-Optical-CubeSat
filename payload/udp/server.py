@@ -68,6 +68,7 @@ def main():
                     sock.sendto(b"F" + struct.pack("!I", file_crc), addr)
                     print(f"EOF received. Wrote: {OUTFILE}")
                     print(f"Final file CRC32: 0x{file_crc:08X}")
+                    print(f"Total dropped packets: {dropped_pack}")
                     break
 
 if __name__ == "__main__":
