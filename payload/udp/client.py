@@ -103,7 +103,7 @@ def main():
         print(f"\nTime elapsed: {elapsedtime}s")
         print(f"Filesize: {filesize}b")
 
-        print(f"Average datarate: {datarate}")
+        print(f"Average datarate: {datarate} Mb/s")
 
         # Send EOF (no payload)
         eof_header = struct.pack(HDR_FMT, TYPE_EOF, seq, 0, 0)

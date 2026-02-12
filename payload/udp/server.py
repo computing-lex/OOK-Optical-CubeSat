@@ -15,6 +15,7 @@ HDR_SIZE = struct.calcsize(HDR_FMT)
 
 def main():
     expected_seq = 0
+    dropped_pack = 0
     file_crc = 0
 
     print(f"Listening UDP on {LISTEN_ADDRESS}:{LISTEN_PORT}")
@@ -49,13 +50,14 @@ def main():
                         file_crc = zlib.crc32(payload, file_crc) & 0xFFFFFFFF
                         # Update display
                         if seq % 50 == 0:
-                            print(f"Recieved seq={seq}", end="\r")
+                            print(f"Recieved seq={seq} Dropped packets={dropped_pack}", end="\r")
                         expected_seq += 1
                         # ACK this seq
                         # sock.sendto(b"A" + struct.pack("!I", seq), addr)
                     else:
                         # If out of order/duplicate, ACK last good (helps stop re-sends)
-                        print(f"Recieved seq={seq} Expected SEQ number={expected_seq}", end="\r")
+                        dropped_pack += 1
+                        print(f"Recieved seq={seq} Dropped packets={dropped_pack}", end="\r")
                         expected_seq=seq
                         #last_good = expected_seq - 1 if expected_seq > 0 else 0
                         #sock.sendto(b"A" + struct.pack("!I", last_good), addr)
