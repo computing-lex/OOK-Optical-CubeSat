@@ -1,3 +1,10 @@
+import os
+import socket
+import struct
+import sys
+import time
+import zlib
+
 SERVER_ADDRESS = "10.0.0.2"
 SERVER_PORT = 5009
 
