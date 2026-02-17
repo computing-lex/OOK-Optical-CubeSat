@@ -63,14 +63,13 @@ def main():
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.settimeout(SOCKET_TIMEOUT)
 
-        # Bigger send buffer (helps a lot at high rate)
+        # Bigger send buffer (helps at high rate)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8 * 1024 * 1024)
 
         seq = 0
         sent_bytes = 0
         sent_pkts = 0
 
-        # Open the file
         with open(filename, "rb") as fh:
             while True:
                 payload = fh.read(CHUNK_SIZE)
@@ -86,7 +85,7 @@ def main():
                 sent_bytes += len(payload)
                 sent_pkts += 1
 
-                # Print less often (printing can cause drops)
+                # Print less often
                 if seq % 5000 == 0:
                     print(f"Sent seq={seq}  progress={sent_bytes}/{filesize}", end="\r")
 
@@ -98,8 +97,7 @@ def main():
 
         print(f"\nAll data packets sent. total packets={seq}")
 
-        currenttime = time.time()
-        elapsedtime = currenttime - starttime
+        elapsedtime = time.time() - starttime
         datarate = (filesize * 8 / elapsedtime) / 1e6
 
         print(f"\nTime elapsed: {elapsedtime:.3f}s")
@@ -119,7 +117,7 @@ def main():
                     if remote_crc == file_crc:
                         print("End-to-end checksum MATCH.")
                     else:
-                        print("Checksum MISMATCH.")
+                        print("Checksum MISMATCH. (Option 1 can reorder data.)")
                     break
             except socket.timeout:
                 retries += 1

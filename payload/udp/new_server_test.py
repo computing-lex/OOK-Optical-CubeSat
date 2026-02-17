@@ -13,7 +13,7 @@ TYPE_EOF  = 1
 HDR_FMT = "!BIHI"  # type(1) seq(4) len(2) crc32(4)
 HDR_SIZE = struct.calcsize(HDR_FMT)
 
-# Optional: buffer writes to reduce disk overhead
+# Buffer writes to reduce disk overhead
 WRITE_BUFFER_BYTES = 1 * 1024 * 1024  # 1 MiB
 
 def main():
@@ -29,7 +29,7 @@ def main():
         sock.bind((LISTEN_ADDRESS, LISTEN_PORT))
 
         # Pre-allocate receive buffer to avoid allocations per packet
-        rx_buf = bytearray(2048)  # enough for header+payload (<= 1500-ish)
+        rx_buf = bytearray(2048)  # enough for header+payload (<= ~1500)
         mv = memoryview(rx_buf)
 
         write_buf = bytearray()
@@ -43,25 +43,23 @@ def main():
                 pkt_type, seq, payload_len, crc = struct.unpack(HDR_FMT, mv[:HDR_SIZE])
                 end = HDR_SIZE + payload_len
                 if end > nbytes:
-                    # malformed / truncated
-                    continue
+                    continue  # malformed/truncated
 
                 payload = mv[HDR_SIZE:end]
 
                 if pkt_type == TYPE_DATA:
-                    # Verify payload length
-                    if payload_len < 0:
-                        continue
-
                     # Verify CRC32 of payload
                     calc = zlib.crc32(payload) & 0xFFFFFFFF
                     if calc != crc:
-                        # corrupted packet
-                        continue
+                        continue  # corrupted
 
-                    # Strict in-order receiver: only accept expected seq
-                    if seq == expected_seq:
-                        # Buffer writes (faster than lots of small writes)
+                    # OPTION 1: streaming receiver (does NOT stall on missing packet)
+                    # Accept any new seq >= expected_seq. Count gaps as "dropped".
+                    if seq >= expected_seq:
+                        if seq > expected_seq:
+                            dropped_pack += (seq - expected_seq)
+
+                        # write payload immediately (arrival order)
                         write_buf += payload
                         if len(write_buf) >= WRITE_BUFFER_BYTES:
                             fout.write(write_buf)
@@ -69,22 +67,13 @@ def main():
 
                         file_crc = zlib.crc32(payload, file_crc) & 0xFFFFFFFF
 
-                        # Print less often (printing is expensive)
                         if seq % 5000 == 0:
                             print(f"Received seq={seq} Dropped packets={dropped_pack}", end="\r")
 
-                        expected_seq += 1
-                        # Optional ACKs (still commented, as in your original)
-                        # sock.sendto(b"A" + struct.pack("!I", seq), addr)
-
+                        expected_seq = seq + 1
                     else:
-                        # Out-of-order or duplicate: count it, but DO NOT advance expected_seq
+                        # old/duplicate packet
                         dropped_pack += 1
-                        if dropped_pack % 5000 == 0:
-                            print(f"Dropped packets={dropped_pack} (last seq={seq}, expected={expected_seq})", end="\r")
-                        # Optional: ACK last good (still commented)
-                        # last_good = expected_seq - 1 if expected_seq > 0 else 0
-                        # sock.sendto(b"A" + struct.pack("!I", last_good), addr)
 
                 elif pkt_type == TYPE_EOF:
                     # Flush remaining buffered writes
@@ -96,7 +85,7 @@ def main():
                     sock.sendto(b"F" + struct.pack("!I", file_crc), addr)
                     print(f"\nEOF received. Wrote: {OUTFILE}")
                     print(f"Final file CRC32: 0x{file_crc:08X}")
-                    print(f"Dropped packets (out-of-order/duplicates seen): {dropped_pack}")
+                    print(f"Dropped packets (gaps + duplicates): {dropped_pack}")
                     break
 
 if __name__ == "__main__":
