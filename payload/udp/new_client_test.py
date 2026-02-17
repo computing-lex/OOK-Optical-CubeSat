@@ -24,8 +24,8 @@ HDR_FMT = "!BIHI"
 HDR_SIZE = struct.calcsize(HDR_FMT)
 
 # Pacing (prevents RX buffer overflow)
-BURST_PKTS = 300
-BURST_SLEEP_S = 0.001  # 0.5 ms
+BURST_PKTS = 200
+BURST_SLEEP_S = 0.0015  # 0.5 ms
 
 def recv_ack(sock):
     data, _ = sock.recvfrom(64)
